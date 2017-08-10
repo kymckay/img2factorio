@@ -177,7 +177,8 @@ def main():
 
     if args.preview:
         os.makedirs("preview", exist_ok=True)
-        img.convert("1", dither=Image.NONE).save(os.path.join("preview", os.path.basename(args.image)))
+        img = img.convert('L').point(lambda x: 0 if x<args.threshold else 255, '1')
+        img.save(os.path.join("preview", os.path.basename(args.image)))
         print("Saved Preview")
         return # Preview mode doesnt write to lua
 
