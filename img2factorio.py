@@ -64,30 +64,34 @@ def maketilable(src):
 
     return dst
 
-def dict_to_lua(table):
+def img_to_lua(img, tiles={0:"out-of-map"}):
     """
-    Converts a dictionary of (x,y) keys with associated tiles into a lua table string
+    Converts an image into a lua table of tile strings
     """
+    w, h = img.size
+    pixels = img.load()
+
     # Track current column so we know when to add new inner tables
     cur_x = -1
 
     lua_table = "{\n"
-    for key in table:
-        x, y = key
+    for x in range(w):
+        for y in range(h):
+            # If the pixel value is associated with a tile, add to the lua table
+            if pixels[x,y] in tiles:
+                # New column means new inner table
+                if x != cur_x:
+                    # Close previous inner table before opening new
+                    if cur_x != -1:
+                        # Cut the last comma first
+                        lua_table = lua_table.rstrip(",\n")
+                        lua_table += "\n\t},\n"
 
-        # New column means new inner table
-        if x != cur_x:
-            # Close previous inner table before opening new
-            if cur_x != -1:
-                # Cut the last comma first
-                lua_table = lua_table.rstrip(",\n")
-                lua_table += "\n\t},\n"
+                    # Open new inner table
+                    lua_table += "\t[{}] = {{\n".format(x)
+                    cur_x = x
 
-            # Open new inner table
-            lua_table += "\t[{}] = {{\n".format(x)
-            cur_x = x
-
-        lua_table += "\t\t[{}] = \"{}\",\n".format(y, table[key])
+                lua_table += "\t\t[{}] = \"{}\",\n".format(y, tiles[pixels[x,y]])
 
     # Cut the last comma and and close the table
     lua_table = lua_table.rstrip(",\n")
@@ -95,24 +99,11 @@ def dict_to_lua(table):
 
     return lua_table
 
-def black_and_white(img, threshold=128):
+def bilevel(img, threshold=128):
     """
-    Converts an image into a tile dictionary based on whether pixels are closer to black or white
+    Converts image to black and white by comparing pixel values to threshold
     """
-    width, height = img.size
-
-    # Convert image to greyscale
-    pixels = img.convert("L").load()
-
-    # Iterate all pixels in the image
-    tiles = {}
-    for x in range(width):
-        for y in range(height):
-            if pixels[x,y] < threshold:
-                # Pixels closer to black are added to the table as void tiles
-                tiles[(x,y)] = "out-of-map"
-
-    return tiles
+    return img.convert('L').point(lambda v: 0 if v < threshold else 255, '1')
 
 def main():
     parser = argparse.ArgumentParser()
@@ -147,6 +138,7 @@ def main():
 
     # Resize if specified
     if args.scale or args.width or args.height:
+        print("Resizing...")
         if args.scale:
             width = round(width * args.scale)
             height = round(height * args.scale)
@@ -155,7 +147,6 @@ def main():
         width = args.width if args.width else width
         height = args.height if args.height else height
 
-        print("Resizing...")
         img = img.resize((width, height), Image.BICUBIC)
         print("New size: {}x{}px".format(width,height))
 
@@ -175,15 +166,14 @@ def main():
         print("Adding border...")
         img = ImageOps.expand(img, args.border)
 
+    # Convert the image to black and white
+    img = bilevel(img, args.threshold)
+
     if args.preview:
         os.makedirs("preview", exist_ok=True)
-        img = img.convert('L').point(lambda x: 0 if x<args.threshold else 255, '1')
         img.save(os.path.join("preview", os.path.basename(args.image)))
         print("Saved Preview")
         return # Preview mode doesnt write to lua
-
-    # Process the image pixels
-    tiles = black_and_white(img, args.threshold)
 
     # Prepare to output
     scenario = os.path.join(os.getenv("APPDATA"), "Factorio\scenarios", os.path.basename(os.path.splitext(args.image)[0]))
@@ -197,15 +187,15 @@ def main():
         print("Template failed to copy: {}".format(control_lua))
         return
 
-    # Convert the tiles diectionary into a lua table string
-    print("Converting tiles...")
-    tiles = dict_to_lua(tiles)
+    # Convert image into a lua table string
+    print("Converting to lua...")
+    table = img_to_lua(img)
 
     # Output to .lua in the respective folder
     print("Writing...")
     with open(control_lua, "a") as file:
         file.write("\nwidth = {}\nheight = {}\nimg_table = ".format(width, height))
-        file.write(tiles)
+        file.write(table)
     print("Complete")
 
 if __name__ == "__main__":
