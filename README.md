@@ -29,4 +29,4 @@ Note: The `rsc\simple-tile.lua` file provides the code used to tile the image on
 
  ## Developer Notes
 
-This script was just something I wrote for my own entertainment, but if you'd like to submit a PR or issue it's more than welcome. The code is certainly not optimised in its current state and it hasn't been idiot-proofed (i.e. it won't complain at you if you pass it valid arguments that are ridicilous). There's also some functionality that isn't implemented which might make some of the code seem pointless (e.g. the lua code reads the tile to insert from the table and so support for other tiles/entities could easily be added - allowing handmade world tiles to be made in image editing software).
+This script was just something I wrote for my own entertainment and not intended to be perfectly optimised or idiot-proofed, but if you'd like to submit a PR or issue it's more than welcome.
