@@ -39,3 +39,7 @@ luac.out
 *.x86_64
 *.hex
 
+# Ignore the preview output folder and test input folder
+preview/**
+images/**
+
