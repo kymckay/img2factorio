@@ -16,14 +16,15 @@ Note: The `simple-tile.lua` file inside the `template` directory provides the co
 
  Argument | Description
  -|-
- -scale &lt;coefficient&gt; | scale the image and maintain the aspect ratio
- -width &lt;pixels&gt; | set the image width in pixels
- -height &lt;pixels&gt; | set the image height in pixels
- -border &lt;thickness&gt; | add a border around all edges of the image
- -quantize &lt;number&gt; | quantize the image colours into a limited number
- -invert | invert the image colours
- -tile | make the image seamless
- -preview | save a preview image and exit
+ --scale &lt;coef&gt; | scale the image and maintain the aspect ratio
+ --width &lt;pixels&gt; | set the image width in pixels
+ --height &lt;pixels&gt; | set the image height in pixels
+ --border &lt;thickness&gt; | add a border around all edges of the image
+ --quantize &lt;number&gt; | quantize the image colours into a limited number
+ --threshold &lt;value&gt; | alter the greyscale value threshold pixels are compared to
+ -i, --invert | invert the image colours
+ -t, --tile | make the image seamless
+ -p, --preview | save a preview image and exit
 
  ## Developer Notes
 

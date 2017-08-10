@@ -95,19 +95,20 @@ def dict_to_lua(table):
 
     return lua_table
 
-def black_and_white(img, width, height):
+def black_and_white(img, threshold=128):
     """
     Converts an image into a tile dictionary based on whether pixels are closer to black or white
     """
-    tiles = {}
+    width, height = img.size
 
     # Convert image to greyscale
     pixels = img.convert("L").load()
 
     # Iterate all pixels in the image
+    tiles = {}
     for x in range(width):
         for y in range(height):
-            if pixels[x,y] < 128:
+            if pixels[x,y] < threshold:
                 # Pixels closer to black are added to the table as void tiles
                 tiles[(x,y)] = "out-of-map"
 
@@ -116,14 +117,15 @@ def black_and_white(img, width, height):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('image', nargs="+", help="relative path to an image file to be converted")
-    parser.add_argument('-scale', type=float, help="scale the image and maintain the aspect ratio", metavar="COEFFICIENT")
-    parser.add_argument('-width', type=int, help="set the image width in pixels")
-    parser.add_argument('-height', type=int, help="set the image height in pixels")
-    parser.add_argument('-border', type=int, help="add a border around all edges of the image", metavar="THICKNESS")
-    parser.add_argument('-quantize', type=int, help="quantize the image colours into a limited number",  metavar="NUMBER")
-    parser.add_argument('-invert', action="store_true", help="invert the image colours")
-    parser.add_argument('-tile', action="store_true", help="make the image seamless")
-    parser.add_argument('-preview', action="store_true", help="save a preview image and exit")
+    parser.add_argument('-p', '--preview', action="store_true", help="save a preview image and exit")
+    parser.add_argument('-i', '--invert', action="store_true", help="invert the image colours")
+    parser.add_argument('-t', '--tile', action="store_true", help="make the image seamless")
+    parser.add_argument('--scale', type=float, help="scale the image and maintain the aspect ratio", metavar="<coef>")
+    parser.add_argument('--width', type=int, help="set the image width in pixels", metavar="<pixels>")
+    parser.add_argument('--height', type=int, help="set the image height in pixels", metavar="<pixels>")
+    parser.add_argument('--border', type=int, help="add a border around all edges of the image", metavar="<thickness>")
+    parser.add_argument('--quantize', type=int, choices=range(1,256), help="quantize the image colours into a limited number", metavar="<number>")
+    parser.add_argument('--threshold', type=int, choices=range(0,255), default=128, help="alter the greyscale value threshold pixels are compared to",  metavar="<value>")
     args = parser.parse_args()
 
     # Attempt to process all image arguments supplied
@@ -181,7 +183,7 @@ def main():
                 continue # Preview mode doesnt write to lua
 
             # Process the image pixels
-            tiles = black_and_white(img, width, height)
+            tiles = black_and_white(img, args.threshold)
 
             # Prepare to output
             scenario = os.path.join(os.getenv("APPDATA"),"Factorio\scenarios",os.path.splitext(image)[0])
